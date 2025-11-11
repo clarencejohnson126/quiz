@@ -77,11 +77,6 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
       return;
     }
 
-    // Flip the card
-    const newCards = [...cards];
-    newCards[index].isFlipped = true;
-    setCards(newCards);
-
     const newFlippedIndices = [...flippedIndices, index];
     setFlippedIndices(newFlippedIndices);
 
@@ -91,28 +86,32 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
       setMoves(prev => prev + 1);
 
       checkTimeoutRef.current = setTimeout(() => {
-        const [firstIdx, secondIdx] = newFlippedIndices;
-        const firstCard = newCards[firstIdx];
-        const secondCard = newCards[secondIdx];
+        setCards(prevCards => {
+          const [firstIdx, secondIdx] = newFlippedIndices;
+          const firstCard = prevCards[firstIdx];
+          const secondCard = prevCards[secondIdx];
+          const newCards = [...prevCards];
 
-        if (firstCard.hairstyleId === secondCard.hairstyleId) {
-          // Match found!
-          newCards[firstIdx].isMatched = true;
-          newCards[secondIdx].isMatched = true;
-          setCards(newCards);
+          if (firstCard.hairstyleId === secondCard.hairstyleId) {
+            // Match found!
+            newCards[firstIdx].isMatched = true;
+            newCards[secondIdx].isMatched = true;
 
-          const newMatchedCount = matchedPairs + 1;
-          setMatchedPairs(newMatchedCount);
-
-          if (newMatchedCount === 8) {
-            setIsGameWon(true);
+            setMatchedPairs(prev => {
+              const newCount = prev + 1;
+              if (newCount === 8) {
+                setIsGameWon(true);
+              }
+              return newCount;
+            });
+          } else {
+            // No match - flip back
+            newCards[firstIdx].isFlipped = false;
+            newCards[secondIdx].isFlipped = false;
           }
-        } else {
-          // No match - flip back
-          newCards[firstIdx].isFlipped = false;
-          newCards[secondIdx].isFlipped = false;
-          setCards(newCards);
-        }
+
+          return newCards;
+        });
 
         setFlippedIndices([]);
         setIsChecking(false);
@@ -152,7 +151,8 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
 
         <div className="grid grid-cols-4 gap-4 max-w-4xl mx-auto">
           {cards.map((card, index) => {
-            const isFlipped = card.isFlipped || card.isMatched;
+            // Card is visible if: matched, flipped permanently, or currently being checked
+            const isFlipped = card.isMatched || card.isFlipped || flippedIndices.includes(index);
             return (
               <div
                 key={card.id}
