@@ -13,7 +13,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Link href="/women">
             <div className="bg-white rounded-xl p-8 shadow-2xl hover:scale-105 transition-transform cursor-pointer">
               <div className="text-6xl mb-4 text-center">👩</div>
@@ -46,6 +46,18 @@ export default function Home() {
               </h2>
               <p className="text-gray-600 text-center">
                 Mix of women's and men's hairstyles
+              </p>
+            </div>
+          </Link>
+
+          <Link href="/x-memory">
+            <div className="bg-gradient-to-br from-pink-400 to-orange-300 rounded-xl p-8 shadow-2xl hover:scale-105 transition-transform cursor-pointer">
+              <div className="text-6xl mb-4 text-center">✂️</div>
+              <h2 className="text-2xl font-bold text-white text-center mb-2">
+                X Memory
+              </h2>
+              <p className="text-white/90 text-center">
+                Premium memory game with timer & 16 pairs
               </p>
             </div>
           </Link>
