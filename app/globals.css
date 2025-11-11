@@ -16,12 +16,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.perspective {
+  perspective: 1000px;
+}
+
 .transform-style-3d {
   transform-style: preserve-3d;
 }
 
 .backface-hidden {
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .rotate-y-180 {

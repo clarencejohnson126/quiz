@@ -151,7 +151,7 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
             <div
               key={card.id}
               onClick={() => handleCardClick(index)}
-              className="aspect-square cursor-pointer"
+              className="aspect-square cursor-pointer perspective"
             >
               <div
                 className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${
@@ -160,18 +160,16 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
               >
                 {/* Card Back */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg shadow-lg flex items-center justify-center backface-hidden ${
-                    card.isFlipped || card.isMatched ? 'hidden' : ''
-                  }`}
+                  className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg shadow-lg flex items-center justify-center backface-hidden"
                 >
                   <div className="text-white text-6xl">💇</div>
                 </div>
 
                 {/* Card Front */}
                 <div
-                  className={`absolute inset-0 bg-white rounded-lg shadow-lg p-4 flex flex-col items-center justify-center backface-hidden ${
-                    card.isFlipped || card.isMatched ? '' : 'hidden'
-                  } ${card.isMatched ? 'opacity-50' : ''}`}
+                  className={`absolute inset-0 bg-white rounded-lg shadow-lg p-4 flex flex-col items-center justify-center backface-hidden rotate-y-180 ${
+                    card.isMatched ? 'opacity-50' : ''
+                  }`}
                 >
                   <img
                     src={card.hairstyle.imageUrl}
