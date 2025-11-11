@@ -73,38 +73,46 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
     const newFlippedIndices = [...flippedIndices, index];
     setFlippedIndices(newFlippedIndices);
 
-    const newCards = [...cards];
-    newCards[index].isFlipped = true;
-    setCards(newCards);
+    // Update cards to flip the clicked card
+    setCards(prevCards => {
+      const newCards = [...prevCards];
+      newCards[index].isFlipped = true;
+      return newCards;
+    });
 
     if (newFlippedIndices.length === 2) {
       setMoves(moves + 1);
       const [firstIndex, secondIndex] = newFlippedIndices;
-      const firstCard = newCards[firstIndex];
-      const secondCard = newCards[secondIndex];
 
-      if (firstCard.hairstyleId === secondCard.hairstyleId) {
-        // Match found
-        newCards[firstIndex].isMatched = true;
-        newCards[secondIndex].isMatched = true;
-        setCards(newCards);
-        setMatchedPairs(matchedPairs + 1);
-        setFlippedIndices([]);
+      setTimeout(() => {
+        setCards(currentCards => {
+          const firstCard = currentCards[firstIndex];
+          const secondCard = currentCards[secondIndex];
 
-        // Check if game is won
-        if (matchedPairs + 1 === 8) {
-          setIsGameWon(true);
-        }
-      } else {
-        // No match - flip back after delay
-        setTimeout(() => {
-          const resetCards = [...newCards];
-          resetCards[firstIndex].isFlipped = false;
-          resetCards[secondIndex].isFlipped = false;
-          setCards(resetCards);
-          setFlippedIndices([]);
-        }, 1000);
-      }
+          if (firstCard.hairstyleId === secondCard.hairstyleId) {
+            // Match found
+            const matchedCards = [...currentCards];
+            matchedCards[firstIndex].isMatched = true;
+            matchedCards[secondIndex].isMatched = true;
+            setMatchedPairs(prev => {
+              const newMatched = prev + 1;
+              if (newMatched === 8) {
+                setIsGameWon(true);
+              }
+              return newMatched;
+            });
+            setFlippedIndices([]);
+            return matchedCards;
+          } else {
+            // No match - flip back after showing for 3 seconds
+            const resetCards = [...currentCards];
+            resetCards[firstIndex].isFlipped = false;
+            resetCards[secondIndex].isFlipped = false;
+            setFlippedIndices([]);
+            return resetCards;
+          }
+        });
+      }, 3000);
     }
   };
 
