@@ -33,10 +33,10 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
   }, [hairstyles]);
 
   const initializeGame = () => {
-    // Take 8 random hairstyles and create pairs
+    // Take 16 random hairstyles and create pairs
     const selectedHairstyles = [...hairstyles]
       .sort(() => Math.random() - 0.5)
-      .slice(0, 8);
+      .slice(0, 16);
 
     const cardPairs: Card[] = [];
     selectedHairstyles.forEach((hairstyle) => {
@@ -99,7 +99,7 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
 
             setMatchedPairs(prev => {
               const newCount = prev + 1;
-              if (newCount === 8) {
+              if (newCount === 16) {
                 setIsGameWon(true);
               }
               return newCount;
@@ -126,7 +126,7 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
           <h1 className="text-4xl font-bold text-white mb-4">{title}</h1>
           <div className="flex justify-center gap-8 text-white text-xl">
             <div>Moves: {moves}</div>
-            <div>Matched: {matchedPairs}/8</div>
+            <div>Matched: {matchedPairs}/16</div>
           </div>
         </div>
 
@@ -149,7 +149,7 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-3 max-w-6xl mx-auto">
           {cards.map((card, index) => {
             // Card is visible if: matched, flipped permanently, or currently being checked
             const isFlipped = card.isMatched || card.isFlipped || flippedIndices.includes(index);

@@ -67,7 +67,7 @@ export default function Home() {
           <div className="bg-white/20 backdrop-blur rounded-lg p-6 inline-block">
             <h3 className="text-white font-semibold text-lg mb-2">How to Play</h3>
             <p className="text-white/90">
-              Click cards to flip them and find matching pairs. Complete all 8 pairs to win!
+              Click cards to flip them and find matching pairs. Complete all 16 pairs to win!
             </p>
           </div>
         </div>
