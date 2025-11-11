@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Hairstyle } from '@/lib/hairstyleData';
 
 interface Card {
@@ -22,9 +22,14 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
   const [moves, setMoves] = useState(0);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [isGameWon, setIsGameWon] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     initializeGame();
+    return () => {
+      if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+    };
   }, [hairstyles]);
 
   const initializeGame = () => {
@@ -34,8 +39,7 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
       .slice(0, 8);
 
     const cardPairs: Card[] = [];
-    selectedHairstyles.forEach((hairstyle, index) => {
-      const pairId = `pair-${index}`;
+    selectedHairstyles.forEach((hairstyle) => {
       cardPairs.push({
         id: `${hairstyle.id}-1`,
         hairstyleId: hairstyle.id,
@@ -59,59 +63,59 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
     setMoves(0);
     setMatchedPairs(0);
     setIsGameWon(false);
+    setIsChecking(false);
   };
 
   const handleCardClick = (index: number) => {
+    // Prevent clicking if already checking, card is already flipped, or card is matched
     if (
-      flippedIndices.length === 2 ||
+      isChecking ||
       flippedIndices.includes(index) ||
-      cards[index].isMatched
+      cards[index].isMatched ||
+      flippedIndices.length >= 2
     ) {
       return;
     }
 
+    // Flip the card
+    const newCards = [...cards];
+    newCards[index].isFlipped = true;
+    setCards(newCards);
+
     const newFlippedIndices = [...flippedIndices, index];
     setFlippedIndices(newFlippedIndices);
 
-    // Update cards to flip the clicked card
-    setCards(prevCards => {
-      const newCards = [...prevCards];
-      newCards[index].isFlipped = true;
-      return newCards;
-    });
-
+    // If this is the second card, check for match after delay
     if (newFlippedIndices.length === 2) {
-      setMoves(moves + 1);
-      const [firstIndex, secondIndex] = newFlippedIndices;
+      setIsChecking(true);
+      setMoves(prev => prev + 1);
 
-      setTimeout(() => {
-        setCards(currentCards => {
-          const firstCard = currentCards[firstIndex];
-          const secondCard = currentCards[secondIndex];
+      checkTimeoutRef.current = setTimeout(() => {
+        const [firstIdx, secondIdx] = newFlippedIndices;
+        const firstCard = newCards[firstIdx];
+        const secondCard = newCards[secondIdx];
 
-          if (firstCard.hairstyleId === secondCard.hairstyleId) {
-            // Match found
-            const matchedCards = [...currentCards];
-            matchedCards[firstIndex].isMatched = true;
-            matchedCards[secondIndex].isMatched = true;
-            setMatchedPairs(prev => {
-              const newMatched = prev + 1;
-              if (newMatched === 8) {
-                setIsGameWon(true);
-              }
-              return newMatched;
-            });
-            setFlippedIndices([]);
-            return matchedCards;
-          } else {
-            // No match - flip back after showing for 3 seconds
-            const resetCards = [...currentCards];
-            resetCards[firstIndex].isFlipped = false;
-            resetCards[secondIndex].isFlipped = false;
-            setFlippedIndices([]);
-            return resetCards;
+        if (firstCard.hairstyleId === secondCard.hairstyleId) {
+          // Match found!
+          newCards[firstIdx].isMatched = true;
+          newCards[secondIdx].isMatched = true;
+          setCards(newCards);
+
+          const newMatchedCount = matchedPairs + 1;
+          setMatchedPairs(newMatchedCount);
+
+          if (newMatchedCount === 8) {
+            setIsGameWon(true);
           }
-        });
+        } else {
+          // No match - flip back
+          newCards[firstIdx].isFlipped = false;
+          newCards[secondIdx].isFlipped = false;
+          setCards(newCards);
+        }
+
+        setFlippedIndices([]);
+        setIsChecking(false);
       }, 3000);
     }
   };
@@ -147,42 +151,44 @@ export default function MemoryGame({ hairstyles, title }: MemoryGameProps) {
         )}
 
         <div className="grid grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {cards.map((card, index) => (
-            <div
-              key={card.id}
-              onClick={() => handleCardClick(index)}
-              className="aspect-square cursor-pointer perspective"
-            >
+          {cards.map((card, index) => {
+            const isFlipped = card.isFlipped || card.isMatched;
+            return (
               <div
-                className={`relative w-full h-full transition-transform duration-500 transform-style-3d ${
-                  card.isFlipped || card.isMatched ? 'rotate-y-180' : ''
-                }`}
+                key={card.id}
+                onClick={() => handleCardClick(index)}
+                className={`aspect-square cursor-pointer ${isChecking ? 'pointer-events-none' : ''}`}
               >
-                {/* Card Back */}
-                <div
-                  className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg shadow-lg flex items-center justify-center backface-hidden"
-                >
-                  <div className="text-white text-6xl">💇</div>
-                </div>
-
-                {/* Card Front */}
-                <div
-                  className={`absolute inset-0 bg-white rounded-lg shadow-lg p-4 flex flex-col items-center justify-center backface-hidden rotate-y-180 ${
-                    card.isMatched ? 'opacity-50' : ''
-                  }`}
-                >
-                  <img
-                    src={card.hairstyle.imageUrl}
-                    alt={card.hairstyle.name}
-                    className="w-full h-32 object-cover rounded mb-2"
-                  />
-                  <p className="text-sm font-semibold text-center text-gray-800">
-                    {card.hairstyle.name}
-                  </p>
+                <div className="relative w-full h-full">
+                  {/* Show either front or back based on flip state */}
+                  {!isFlipped ? (
+                    /* Card Back */
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg shadow-lg flex items-center justify-center">
+                      <div className="text-white text-6xl">💇</div>
+                    </div>
+                  ) : (
+                    /* Card Front */
+                    <div className={`absolute inset-0 bg-white rounded-lg shadow-lg p-2 flex flex-col items-center justify-center ${
+                      card.isMatched ? 'opacity-50' : ''
+                    }`}>
+                      <img
+                        src={card.hairstyle.imageUrl}
+                        alt={card.hairstyle.name}
+                        className="w-full h-24 object-cover rounded mb-2"
+                        onError={(e) => {
+                          console.error('Image failed to load:', card.hairstyle.imageUrl);
+                          e.currentTarget.src = 'https://via.placeholder.com/200/8B5CF6/FFFFFF?text=Hair';
+                        }}
+                      />
+                      <p className="text-xs font-semibold text-center text-gray-800">
+                        {card.hairstyle.name}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="text-center mt-8">
